@@ -1,0 +1,6 @@
+{
+  "name": "Ronel S.R.L. Automotores — Concesionario y Service Oficial en Tacuarembó",
+  "description": "Venta de vehículos 0km Fiat y usados seleccionados, Service Oficial autorizado y repuestos originales en Tacuarembó, Uruguay.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
