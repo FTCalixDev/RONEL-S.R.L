@@ -40,8 +40,17 @@ import {
   Lock,
   DollarSign,
   Image as ImageIcon,
-  AlertTriangle,
 } from 'lucide-react';
+import {
+  HERO_SHOWROOM_IMG,
+  WORKSHOP_IMG,
+  STRADA_PICKUP_IMG,
+  FASTBACK_SUV_IMG,
+  PULSE_CROSSOVER_IMG,
+  SIGNAGE_PHOTO_IMG,
+  FLYER_PHOTO_IMG,
+  resolveAssetUrl,
+} from './imageAssets';
 
 // ---------------------------------------------------------------------------
 // TYPES & CONSTANTS
@@ -121,11 +130,11 @@ const EMAIL_HOTMAIL = 'ronelsrl@hotmail.com';
 const FACEBOOK_URL = 'https://www.facebook.com/search/top?q=RONEL%20S.R.L';
 const ADDRESS_TACUAREMBO = 'W. Beltrán 318 (esq. Juan Ortiz), Tacuarembó, Uruguay';
 
-// Uploaded Brand Assets & Generated Showroom Visuals
-const SIGNAGE_PHOTO = '/assets/aistudio/_4BFD534B-7048-4A22-9D33-808619A065A1__e179260d.png';
-const FLYER_PHOTO = '/assets/aistudio/image_870ea488.png';
-const HERO_IMAGE = '/src/assets/images/hero_fiat_showroom_1794404735205.jpg';
-const WORKSHOP_IMAGE = '/src/assets/images/official_service_workshop_1794404740369.jpg';
+// Bundled Production Assets (100% compatible with Cloudflare Pages & GitHub builds)
+const SIGNAGE_PHOTO = SIGNAGE_PHOTO_IMG;
+const FLYER_PHOTO = FLYER_PHOTO_IMG;
+const HERO_IMAGE = HERO_SHOWROOM_IMG;
+const WORKSHOP_IMAGE = WORKSHOP_IMG;
 
 const OFFICIAL_BRANDS = [
   'TOYOTA',
@@ -158,7 +167,7 @@ const INITIAL_VEHICLES: Vehicle[] = [
     initialDeliveryUsd: 6500,
     monthlyEstimateUsd: 345,
     warranty: 'Garantía Oficial 3 años o 100.000 km',
-    image: '/src/assets/images/fiat_strada_pickup_1794404735790.jpg',
+    image: STRADA_PICKUP_IMG,
     highlights: [
       'Capacidad de carga de hasta 650 kg ideal para establecimiento y ciudad',
       'Control de tracción avanzado TC+ para caminos de tierra o barro',
@@ -185,7 +194,7 @@ const INITIAL_VEHICLES: Vehicle[] = [
     initialDeliveryUsd: 9600,
     monthlyEstimateUsd: 495,
     warranty: 'Garantía Oficial 3 años o 100.000 km',
-    image: '/src/assets/images/fiat_fastback_suv_1794404736991.jpg',
+    image: FASTBACK_SUV_IMG,
     highlights: [
       'Baúl líder del segmento con 600 litros de capacidad real',
       'Frenado autónomo de emergencia (AEB) y mantenimiento activo de carril',
@@ -212,7 +221,7 @@ const INITIAL_VEHICLES: Vehicle[] = [
     initialDeliveryUsd: 7900,
     monthlyEstimateUsd: 410,
     warranty: 'Garantía Oficial 3 años o 100.000 km',
-    image: '/src/assets/images/fiat_pulse_crossover_1794404738687.jpg',
+    image: PULSE_CROSSOVER_IMG,
     highlights: [
       'Motor Turbo 200 con 200 Nm de torque desde bajas revoluciones',
       '4 Airbags de serie y paquete de asistencias ADAS',
@@ -266,7 +275,7 @@ const INITIAL_VEHICLES: Vehicle[] = [
     initialDeliveryUsd: 5500,
     monthlyEstimateUsd: 275,
     warranty: 'Revisado en 40 puntos · Garantía Mecánica Ronel',
-    image: '/src/assets/images/fiat_strada_pickup_1794404735790.jpg',
+    image: STRADA_PICKUP_IMG,
     highlights: [
       'Todos los services oficiales sellados en Ronel S.R.L. Tacuarembó',
       'Cubiertas nuevas, lona marítima original y protector de caja',
@@ -293,7 +302,7 @@ const INITIAL_VEHICLES: Vehicle[] = [
     initialDeliveryUsd: 6200,
     monthlyEstimateUsd: 315,
     warranty: 'Garantía de Fábrica Vigente · Ficha Oficial',
-    image: '/src/assets/images/fiat_pulse_crossover_1794404738687.jpg',
+    image: PULSE_CROSSOVER_IMG,
     highlights: [
       'Service de 10.000 km y 20.000 km realizados en nuestro taller oficial',
       'Sin detalles de pintura ni desgaste interior',
@@ -667,14 +676,15 @@ function ResilientImage({
   className?: string;
   fallbackLabel?: string;
 }) {
+  const resolvedSrc = useMemo(() => resolveAssetUrl(src), [src]);
   const [hasError, setHasError] = useState(false);
 
   // Reset error state if src changes (e.g. when admin updates image)
   useEffect(() => {
     setHasError(false);
-  }, [src]);
+  }, [resolvedSrc]);
 
-  if (hasError || !src) {
+  if (hasError || !resolvedSrc) {
     return (
       <div
         className={`flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-slate-300 p-6 text-center ${className || ''}`}
@@ -689,7 +699,7 @@ function ResilientImage({
 
   return (
     <img
-      src={src}
+      src={resolvedSrc}
       alt={alt}
       referrerPolicy="no-referrer"
       onError={() => setHasError(true)}
@@ -746,14 +756,17 @@ export default function App() {
   // Theme state (Dark mode by default)
   const [isDark, setIsDark] = useState<boolean>(true);
 
-  // Dynamic Vehicles State (persisted in localStorage, editable via secret keyboard shortcut)
+  // Dynamic Vehicles State (persisted in localStorage, auto-healing legacy image paths)
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return parsed.map((v: Vehicle) => ({
+            ...v,
+            image: resolveAssetUrl(v.image),
+          }));
         }
       }
     } catch {
@@ -1002,7 +1015,7 @@ export default function App() {
       initialDeliveryUsd: 7000,
       monthlyEstimateUsd: 360,
       warranty: 'Garantía Oficial 3 años o 100.000 km',
-      image: '/src/assets/images/fiat_strada_pickup_1794404735790.jpg',
+      image: STRADA_PICKUP_IMG,
       highlights: [
         'Respaldo de Service Oficial RONEL S.R.L. en Tacuarembó',
         'Financiación bancaria y toma de permutas',
@@ -1334,7 +1347,7 @@ export default function App() {
                 {/* Top Corner: Real RONEL S.R.L. Plaque Badge */}
                 <div className="relative z-10 p-4 sm:p-5 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 bg-slate-950/85 backdrop-blur-md border border-white/15 rounded-xl p-2 pr-3.5 max-w-full">
-                    <img
+                    <ResilientImage
                       src={SIGNAGE_PHOTO}
                       alt="Cartel Oficial RONEL S.R.L."
                       className="w-11 h-11 rounded-lg object-cover border border-white/20 shrink-0"
@@ -2168,14 +2181,14 @@ export default function App() {
               {/* Authentic Uploaded Signage & Flyer Preview */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/15 bg-slate-900 aspect-[4/3]">
-                  <img
+                  <ResilientImage
                     src={SIGNAGE_PHOTO}
                     alt="Placa Oficial RONEL S.R.L. Servicio Integral de Mecánica General"
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/15 bg-slate-900 aspect-[4/3]">
-                  <img
+                  <ResilientImage
                     src={FLYER_PHOTO}
                     alt="Comunicado Oficial RONEL S.R.L. Horarios y Teléfonos"
                     className="w-full h-full object-cover"
@@ -2918,15 +2931,15 @@ export default function App() {
                             {[
                               {
                                 label: 'Pickup Strada',
-                                url: '/src/assets/images/fiat_strada_pickup_1794404735790.jpg',
+                                url: STRADA_PICKUP_IMG,
                               },
                               {
                                 label: 'SUV Fastback Rojo',
-                                url: '/src/assets/images/fiat_fastback_suv_1794404736991.jpg',
+                                url: FASTBACK_SUV_IMG,
                               },
                               {
                                 label: 'SUV Pulse Plata',
-                                url: '/src/assets/images/fiat_pulse_crossover_1794404738687.jpg',
+                                url: PULSE_CROSSOVER_IMG,
                               },
                               {
                                 label: 'Salón Doble Unidad',
